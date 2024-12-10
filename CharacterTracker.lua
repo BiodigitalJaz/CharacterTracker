@@ -1,3 +1,8 @@
+-- Initialize the database if it doesn't exist
+if not CharacterTrackerDB then
+    CharacterTrackerDB = {}
+end
+
 -- Create a basic frame for the UI
 local CharacterTrackerFrame = CreateFrame("Frame", "CharacterTrackerFrame", UIParent)
 CharacterTrackerFrame:SetSize(910, 400)  -- Width, Height
