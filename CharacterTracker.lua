@@ -1,6 +1,6 @@
 -- Create a basic frame for the UI
 local CharacterTrackerFrame = CreateFrame("Frame", "CharacterTrackerFrame", UIParent)
-CharacterTrackerFrame:SetSize(900, 400)  -- Width, Height
+CharacterTrackerFrame:SetSize(910, 400)  -- Width, Height
 CharacterTrackerFrame:SetPoint("CENTER") -- Centered on the screen
 
 -- Create a background texture
@@ -17,6 +17,10 @@ border:SetBackdrop({
     edgeSize = 16,
 })
 border:SetBackdropBorderColor(1, 1, 1, 1) -- White border
+CharacterTrackerFrame:Hide() -- Start hidden
+
+-- Add the frame to UISpecialFrames to close it with the Escape key
+table.insert(UISpecialFrames, "CharacterTrackerFrame")
 
 -- Add a title to the frame
 local title = CharacterTrackerFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -25,12 +29,12 @@ title:SetText("Character Tracker")
 
 -- Create a scrollable area
 local scrollFrame = CreateFrame("ScrollFrame", nil, CharacterTrackerFrame, "UIPanelScrollFrameTemplate")
-scrollFrame:SetSize(880, 300) -- Match width, set height for visible rows
+scrollFrame:SetSize(890, 300) -- Match width, set height for visible rows
 scrollFrame:SetPoint("TOP", 0, -40)
 
 -- Create the scrollable content frame
 local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-scrollContent:SetSize(880, 300) -- Initial size; will expand based on rows
+scrollContent:SetSize(890, 300) -- Initial size; will expand based on rows
 scrollFrame:SetScrollChild(scrollContent)
 
 -- Table to hold rows for character data
@@ -92,11 +96,11 @@ local function RefreshCharacterTable()
 
     -- Add table headers
     local header = CreateFrame("Frame", nil, scrollContent)
-    header:SetSize(860, 20)
+    header:SetSize(870, 20)
     header:SetPoint("TOP", 0, 0)
 
     local headers = { "Name", "Class", "Race", "Spec", "Item Level", "Profession1", "Profession2" }
-    local columnWidths = { 120, 120, 150, 120, 100, 120, 120 }
+    local columnWidths = { 120, 120, 150, 120, 100, 150, 120 }
     local xOffset = 10
     for i, text in ipairs(headers) do
         local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -113,7 +117,7 @@ local function RefreshCharacterTable()
     for _, character in ipairs(sortedCharacters) do
         -- Create a new row
         local row = CreateFrame("Frame", nil, scrollContent)
-        row:SetSize(860, 20)
+        row:SetSize(880, 20)
         row:SetPoint("TOP", 0, yOffset)
 
         -- Highlight the current character's row
@@ -172,10 +176,12 @@ frame:SetScript("OnEvent", function()
 
     local profession1, profession2 = "None", "None"
     if professions[1] then
-        profession1 = select(1, GetProfessionInfo(professions[1]))
+        local profName, _, skillLevel = GetProfessionInfo(professions[1])
+        profession1 = profName .. " (" .. skillLevel .. ")"
     end
     if professions[2] then
-        profession2 = select(1, GetProfessionInfo(professions[2]))
+        local profName, _, skillLevel = GetProfessionInfo(professions[2])
+        profession2 = profName .. " (" .. skillLevel .. ")"
     end
 
     -- Save the character data
@@ -189,4 +195,30 @@ frame:SetScript("OnEvent", function()
     }
 
     print("Character Tracker Data Saved for:", name)
+end)
+
+-- Update specialization and refresh the table
+local function UpdateSpecialization()
+    local name = UnitName("player")
+    local spec = GetSpecialization() and select(2, GetSpecializationInfo(GetSpecialization())) or "None"
+
+    -- Update the specialization in the database
+    if CharacterTrackerDB[name] then
+        CharacterTrackerDB[name].spec = spec
+        print("Updated specialization for", name, "to", spec)
+    end
+
+    -- Refresh the table to reflect changes
+    if CharacterTrackerFrame:IsShown() then
+        RefreshCharacterTable()
+    end
+end
+
+-- Event frame to listen for spec changes
+local specChangeFrame = CreateFrame("Frame")
+specChangeFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+specChangeFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ACTIVE_TALENT_GROUP_CHANGED" then
+        UpdateSpecialization()
+    end
 end)
