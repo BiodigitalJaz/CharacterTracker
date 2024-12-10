@@ -2,7 +2,7 @@
 ## Title: Character Tracker
 ## Notes: Track all your characters in a single pane of glass.
 ## Author: Mastafoo
-## Version: 1.0
+## Version: 1.1
 ## SavedVariables: CharacterTrackerDB
 
 CharacterTracker.lua
