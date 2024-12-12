@@ -45,7 +45,6 @@ scrollFrame:SetScrollChild(scrollContent)
 -- Table to hold rows for character data
 scrollContent.rows = {}
 
-
 -- Start hidden
 CharacterTrackerFrame:Hide()
 
@@ -65,9 +64,6 @@ function SlashCmdList.CT(msg, editbox)
         CharacterTrackerFrame:Show()
     end
 end
-
--- Table to hold rows for character data
-CharacterTrackerFrame.rows = {}
 
 -- Function to refresh the table with sorted data
 local function RefreshCharacterTable()
@@ -162,24 +158,23 @@ local function RefreshCharacterTable()
     scrollContent:SetHeight(math.abs(yOffset))
 end
 
-
 -- Refresh the table when the frame is shown
 CharacterTrackerFrame:SetScript("OnShow", function()
     RefreshCharacterTable()
 end)
 
--- Save character data when the player logs in
+-- Save character data when the player logs in or updates occur
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function()
+frame:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE") -- Update item level dynamically
+frame:RegisterEvent("SKILL_LINES_CHANGED") -- Update professions dynamically
+
+local function UpdateCharacterData(event)
     local name = UnitName("player")
-    local class = UnitClass("player")
-    local race = UnitRace("player")
-    local spec = GetSpecialization() and select(2, GetSpecializationInfo(GetSpecialization())) or "None"
     local itemLevel = string.format("%.1f", select(2, GetAverageItemLevel()))
     local professions = { GetProfessions() }
-
     local profession1, profession2 = "None", "None"
+
     if professions[1] then
         local profName, _, skillLevel = GetProfessionInfo(professions[1])
         profession1 = profName .. " (" .. skillLevel .. ")"
@@ -189,41 +184,29 @@ frame:SetScript("OnEvent", function()
         profession2 = profName .. " (" .. skillLevel .. ")"
     end
 
-    -- Save the character data
-    CharacterTrackerDB[name] = {
-        class = class,
-        race = race,
-        spec = spec,
-        itemLevel = itemLevel,
-        profession1 = profession1,
-        profession2 = profession2
-    }
-
-    print("Character Tracker Data Saved for:", name)
-end)
-
--- Update specialization and refresh the table
-local function UpdateSpecialization()
-    local name = UnitName("player")
-    local spec = GetSpecialization() and select(2, GetSpecializationInfo(GetSpecialization())) or "None"
-
-    -- Update the specialization in the database
-    if CharacterTrackerDB[name] then
-        CharacterTrackerDB[name].spec = spec
-        print("Updated specialization for", name, "to", spec)
+    if not CharacterTrackerDB[name] then
+        CharacterTrackerDB[name] = {}
     end
 
-    -- Refresh the table to reflect changes
+    -- Update data in the database
+    CharacterTrackerDB[name].itemLevel = itemLevel
+    CharacterTrackerDB[name].profession1 = profession1
+    CharacterTrackerDB[name].profession2 = profession2
+
+    --- print("Updated character data for", name, "via event:", event)
+
+    -- Refresh table if visible
     if CharacterTrackerFrame:IsShown() then
         RefreshCharacterTable()
     end
 end
 
--- Event frame to listen for spec changes
-local specChangeFrame = CreateFrame("Frame")
-specChangeFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-specChangeFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ACTIVE_TALENT_GROUP_CHANGED" then
-        UpdateSpecialization()
+frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "PLAYER_LOGIN" then
+        UpdateCharacterData("PLAYER_LOGIN")
+    elseif event == "PLAYER_AVG_ITEM_LEVEL_UPDATE" then
+        UpdateCharacterData("PLAYER_AVG_ITEM_LEVEL_UPDATE")
+    elseif event == "SKILL_LINES_CHANGED" then
+        UpdateCharacterData("SKILL_LINES_CHANGED")
     end
 end)
