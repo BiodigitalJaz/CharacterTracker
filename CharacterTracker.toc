@@ -4,5 +4,6 @@
 ## Author: Mastafoo
 ## Version: 1.4
 ## SavedVariables: CharacterTrackerDB
+## OptionalDeps: LibDataBroker-1.1, LibDBIcon-1.0
 
 CharacterTracker.lua

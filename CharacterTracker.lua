@@ -3,6 +3,41 @@ if not CharacterTrackerDB then
     CharacterTrackerDB = {}
 end
 
+-- Ensure the LibDataBroker and LibDBIcon libraries are loaded
+local LDB = LibStub:GetLibrary("LibDataBroker-1.1", true)
+local LDBIcon = LibStub:GetLibrary("LibDBIcon-1.0", true)
+
+-- Minimap icon settings
+if not CharacterTrackerDB.Minimap then
+    CharacterTrackerDB.Minimap = { hide = false }
+end
+
+-- Create a data object for LibDataBroker
+local dataObject = LDB:NewDataObject("CharacterTracker", {
+    type = "launcher",
+    text = "Character Tracker",
+    icon = "Interface\\Icons\\Achievement_GuildPerk_WorkingOvertime",
+    OnClick = function(self, button)
+        if button == "LeftButton" then
+            -- Toggle the tracker frame
+            if CharacterTrackerFrame:IsShown() then
+                CharacterTrackerFrame:Hide()
+            else
+                CharacterTrackerFrame:Show()
+            end
+        end
+    end,
+    OnTooltipShow = function(tooltip)
+        tooltip:AddLine("Character Tracker")
+        tooltip:AddLine("Left-click to toggle the tracker.")
+    end,
+})
+
+-- Register the minimap icon with LibDBIcon
+if LDBIcon then
+    LDBIcon:Register("CharacterTracker", dataObject, CharacterTrackerDB.Minimap)
+end
+
 -- Create a basic frame for the UI
 local CharacterTrackerFrame = CreateFrame("Frame", "CharacterTrackerFrame", UIParent)
 CharacterTrackerFrame:SetSize(910, 400)  -- Width, Height
