@@ -2,7 +2,7 @@
 ## Title: Character Tracker
 ## Notes: Track all your characters in a single pane of glass.
 ## Author: Mastafoo
-## Version: 1.4
+## Version: 1.5
 ## SavedVariables: CharacterTrackerDB
 ## OptionalDeps: LibDataBroker-1.1, LibDBIcon-1.0
 
